@@ -1,20 +1,21 @@
-# Commons
+#### Commons
 
-## 项目简介
-`commons` 是一个 Java 基础库，提供常用的工具和组件，会逐步完善。该项目采用 Apache 2.0 许可证，可自由使用和修改。
+## Project Overview
+`commons` is a Java foundational library that provides commonly used tools and components. It will be continuously improved. This project is licensed under Apache 2.0, allowing free use and modification.
 
-## 目录结构
+## Directory Structure
 ```dtd
 commons/
-│── common-sharding-dao/    # 数据库分片
+│── common-sharding-dao/    # Database Sharding
 ```
 
-## 快速开始 
-### 1. 唯一 ID 生成示例
+
+## Quick Start
+### 1. Unique ID Generation Example
 ![img.png](img.png)
 
-snowflake算法生成ID，workid由zookeeper自动派发，保证唯一。监听zookeeper连接状态，如果zk断线，重新注册自己workid。
-#### 添加依赖：
+The Snowflake algorithm generates unique IDs, with `workid` automatically dispatched by Zookeeper to ensure uniqueness. The connection status of Zookeeper is monitored; if the Zookeeper connection is lost, the `workid` is re-registered.
+#### Add Dependency:
 ```xml
 <dependency>
     <groupId>com.github.shun</groupId>
@@ -22,31 +23,50 @@ snowflake算法生成ID，workid由zookeeper自动派发，保证唯一。监听
     <version>{last-version}</version>
 </dependency>
 ```
-#### 配置：
+
+#### Configuration:
 ```yaml
 zk:
   addresses: ${ZK_ADDRESSES:119.3.155.248:21811}
   sessionTimeoutMs: ${ZK_SESSIONTIMEOUTMS:60000}
   connectionTimeoutMs: ${ZK_CONNECTIONTIMEOUTMS:15000}
 ```
-#### 启动类加入注解 `@EnableZkSnowFlake`
+
+#### Add Annotation to the Startup Class `@EnableZkSnowFlake`
 ```java
 @EnableZkSnowFlake
 @SpringBootApplication
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
-        
     }
 }
 ```
-#### 使用：
+
+#### Usage:
 ```java
     @Autowired
     private SnowflakeKeyGenerator snowflakeKeyGenerator;
 
-    // somewhere 生成唯一ID
+    // somewhere generate a unique ID
     Long anyId = snowflakeKeyGenerator.generateKey();
 ```
 
 
+---
+
+### Explanation
+
+1. **Project Description**:
+    - The `commons` library is designed to provide reusable utilities and components for Java projects. It includes features like database sharding and unique ID generation using the Snowflake algorithm.
+
+2. **Directory Structure**:
+    - The `common-sharding-dao` directory contains the implementation for database sharding functionality.
+
+3. **Quick Start Guide**:
+    - **Dependency**: A Maven dependency is provided to include the library in your project.
+    - **Configuration**: YAML configuration is required to set up Zookeeper addresses and timeouts.
+    - **Annotation**: The `@EnableZkSnowFlake` annotation enables the Snowflake ID generation feature.
+    - **Usage**: An example demonstrates how to autowire the `SnowflakeKeyGenerator` and generate a unique ID.
+
+This documentation provides a concise overview of setting up and using the `commons` library for unique ID generation in a Java Spring Boot application.

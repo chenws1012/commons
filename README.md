@@ -12,6 +12,7 @@ commons/
 ## 快速开始 
 ### 1. 唯一 ID 生成示例
 ![img.png](img.png)
+
 snowflake算法的生成ID，workid由zookeeper派发，保证唯一。监听zookeeper连接状态，如果zk断线，重新注册自己workid。
 #### 添加依赖：
 ```xml

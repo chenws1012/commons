@@ -1,7 +1,7 @@
 #### Commons
 
 ## Project Overview
-`commons` is a Java foundational library that provides commonly used tools and components. It will be continuously improved. This project is licensed under Apache 2.0, allowing free use and modification.
+This is a Java foundational library that provides commonly used tools and components. It will be continuously improved. This project is licensed under Apache 2.0, allowing free use and modification.
 
 ## Directory Structure
 ```dtd

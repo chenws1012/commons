@@ -1,4 +1,4 @@
-package com.github.shun.shardingdao.keygen.keygen;
+package com.github.shun.common.shardingdao.keygen;
 
 import com.google.common.base.Preconditions;
 

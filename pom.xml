@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>common-sharding-dao</module>
+        <module>common-ratelimiter</module>
     </modules>
 
     <properties>
@@ -18,6 +19,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <spring-boot.version>2.3.12.RELEASE</spring-boot.version>
+
+        <guava.version>28.2-jre</guava.version>
     </properties>
 
     <dependencyManagement>
@@ -28,6 +31,12 @@
                 <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
             </dependency>
         </dependencies>
 

@@ -1,6 +1,6 @@
-package com.github.shun.shardingdao.keygen.keygen.annotation;
+package com.github.shun.common.shardingdao.keygen.annotation;
 
-import com.github.shun.shardingdao.keygen.keygen.ZkSnowFlakeConfig;
+import com.github.shun.common.shardingdao.keygen.ZkSnowFlakeConfig;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;

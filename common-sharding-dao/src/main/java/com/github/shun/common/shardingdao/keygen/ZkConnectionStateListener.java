@@ -1,4 +1,4 @@
-package com.github.shun.shardingdao.keygen.keygen;
+package com.github.shun.common.shardingdao.keygen;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;

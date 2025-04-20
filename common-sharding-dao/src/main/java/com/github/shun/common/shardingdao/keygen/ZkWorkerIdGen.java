@@ -27,21 +27,21 @@ public class ZkWorkerIdGen implements WorkerIdGen {
     @Override
     @SneakyThrows
     public Long getWorkerId() {
-        Random random = new Random();
         boolean flag = false;
         long workId = 0;
-        int retryTimes = 0;
-        while (!flag && retryTimes < 20){
-            workId = random.nextInt(1000)+1L;
+        for (int i = 1; i < 1001; i++) {
             try {
-                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/shun/workId/"+workId, appName.getBytes(StandardCharsets.UTF_8));
-                client.getConnectionStateListenable().addListener(new ZkConnectionStateListener("/shun/workId/"+workId, appName.getBytes(StandardCharsets.UTF_8)));
+                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/shwoody/workId/"+i, appName.getBytes(StandardCharsets.UTF_8));
+                client.getConnectionStateListenable().addListener(new ZkConnectionStateListener("/shwoody/workId/"+i, appName.getBytes(StandardCharsets.UTF_8)));
                 flag = true;
-            } catch (KeeperException.NodeExistsException e) {
-                e.printStackTrace();
+                workId = i;
+                break;
+            }catch (KeeperException.NodeExistsException e){
+                log.warn("workId is exist, retrying...");
             }
-            retryTimes++;
+
         }
+
         if (!flag){
             throw new RuntimeException("get workId failed After retrying 20 times！ ");
         }

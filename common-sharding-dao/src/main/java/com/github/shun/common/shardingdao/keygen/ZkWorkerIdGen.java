@@ -20,6 +20,8 @@ public class ZkWorkerIdGen implements WorkerIdGen {
     private static final int WORK_ID_BITS = 10; // workId 的位数
     private static final int MAX_WORK_ID = (1 << WORK_ID_BITS) - 1; // 最大 workId 值
 
+    private static final String ZK_ROOT_PATH = "/snowflake/workId";
+
     private CuratorFramework client;
 
     private String appName;
@@ -34,9 +36,9 @@ public class ZkWorkerIdGen implements WorkerIdGen {
     public Long getWorkerId() {
         List<String> existingWorkIds = Collections.emptyList();
         try {
-            existingWorkIds = client.getChildren().forPath("/shwoody/workId");
+            existingWorkIds = client.getChildren().forPath(ZK_ROOT_PATH);
         } catch (KeeperException.NoNodeException e) {
-            log.warn("Path /shwoody/workId does not exist.");
+            log.warn("Path {} does not exist.", ZK_ROOT_PATH);
         } catch (KeeperException e) {
             log.error("Failed to get children from ZooKeeper", e);
         }
@@ -57,7 +59,7 @@ public class ZkWorkerIdGen implements WorkerIdGen {
             try {
                 client.create().creatingParentsIfNeeded()
                         .withMode(CreateMode.EPHEMERAL)
-                        .forPath("/shwoody/workId/"+i, appName.getBytes(StandardCharsets.UTF_8));
+                        .forPath(ZK_ROOT_PATH + "/" + i, appName.getBytes(StandardCharsets.UTF_8));
                 flag = true;
                 workId = i;
                 break;
@@ -72,7 +74,7 @@ public class ZkWorkerIdGen implements WorkerIdGen {
         }
 
         client.getConnectionStateListenable()
-                .addListener(new ZkConnectionStateListener("/shwoody/workId/"+workId, appName.getBytes(StandardCharsets.UTF_8)));
+                .addListener(new ZkConnectionStateListener(ZK_ROOT_PATH + "/" + workId, appName.getBytes(StandardCharsets.UTF_8)));
 
         log.info("start get workId:{}", workId);
         return workId;

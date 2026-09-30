@@ -7,9 +7,11 @@ import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
- * @author: chenwenshun@gmail.com
- * @description: 监听zookeeper连接状态，重连后重新注册workId
+ * @author: Wilson Chen
+ * @description: TODO
  * @date: 2024/5/4 7:32 PM
  * @version: 1.0
  */
@@ -23,38 +25,45 @@ public class ZkConnectionStateListener implements ConnectionStateListener{
         this.path = path;
         this.data = data;
     }
+
     @Override
     public void stateChanged(CuratorFramework client, ConnectionState newState) {
         log.info("stateChanged:{}", newState);
         if(newState == ConnectionState.LOST){
             log.info("session has expired");
-            while(true) {
-                try {
-                    if (client.getZookeeperClient().blockUntilConnectedOrTimedOut()) {
-                        //连接恢复，重新注册workId
-                        client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
-                        log.info("recreate workId:" + path);
-                        break;
-                    }
-                } catch (KeeperException.NodeExistsException e) {
-                    log.info("Znode " + path + " already exists, this might be caused by a delete delay from the zk server");
-                    try {
-                        //session过期，如果workId还存在，可能是zk server删除的延迟，这里手动删除，用新的session重新创建，保持心跳
-                        client.delete().forPath(path);
-                        log.info("deleted node {}", path);
-                    } catch (Exception ex) {
-                        log.warn("delete node {} Exception {}", path, ex.getMessage());
-                    }
-                } catch (InterruptedException e) {
-                    log.error("InterruptedException", e);
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    log.error("recreate workId Exception", e);
-                    break;
-                }
-            }
+            CompletableFuture.runAsync(() -> handleSessionLost(client));
         }
 
+    }
+
+    private void handleSessionLost(CuratorFramework client) {
+        while (true) {
+            try {
+                if (client.getZookeeperClient().blockUntilConnectedOrTimedOut()) {
+                    try {
+                        client.create().creatingParentsIfNeeded()
+                                .withMode(CreateMode.EPHEMERAL)
+                                .forPath(path, data);
+                        log.info("Successfully recreated ephemeral node: {}", path);
+                        break;
+                    } catch (KeeperException.NodeExistsException e) {
+                        log.warn("Node already exists: {}. Attempting to delete and recreate.", path);
+                        try {
+                            client.delete().forPath(path);
+                            log.info("Deleted existing node: {}", path);
+                        } catch (Exception ex) {
+                            log.warn("Failed to delete node {}: {}", path, ex.getMessage());
+                        }
+                    }
+                }
+            } catch (InterruptedException e) {
+                log.error("Retry thread interrupted.", e);
+                Thread.currentThread().interrupt();
+                break;
+            } catch (Exception e) {
+                log.error("Exception while recreating ephemeral node: {}", path, e);
+                break;
+            }
+        }
     }
 }

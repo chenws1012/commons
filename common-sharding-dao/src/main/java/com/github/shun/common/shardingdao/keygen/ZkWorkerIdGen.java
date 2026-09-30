@@ -7,13 +7,18 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * @author chenwenshun@gmail.com on 2023/9/18
  */
 @Slf4j
 public class ZkWorkerIdGen implements WorkerIdGen {
+
+    private static final int WORK_ID_BITS = 10; // workId 的位数
+    private static final int MAX_WORK_ID = (1 << WORK_ID_BITS) - 1; // 最大 workId 值
 
     private CuratorFramework client;
 
@@ -27,12 +32,32 @@ public class ZkWorkerIdGen implements WorkerIdGen {
     @Override
     @SneakyThrows
     public Long getWorkerId() {
+        List<String> existingWorkIds = Collections.emptyList();
+        try {
+            existingWorkIds = client.getChildren().forPath("/shwoody/workId");
+        } catch (KeeperException.NoNodeException e) {
+            log.warn("Path /shwoody/workId does not exist.");
+        } catch (KeeperException e) {
+            log.error("Failed to get children from ZooKeeper", e);
+        }
+
+        Set<Integer> existingWorkIdSet = new HashSet<>();
+        for (String id : existingWorkIds) {
+            existingWorkIdSet.add(Integer.parseInt(id));
+        }
+
         boolean flag = false;
         long workId = 0;
-        for (int i = 1; i < 1001; i++) {
+        List<Integer> candidates = IntStream.range(1, MAX_WORK_ID).boxed().collect(Collectors.toList());
+        Collections.shuffle(candidates);
+        for (int i : candidates) {
+            if (existingWorkIdSet.contains(i)) {
+                continue;
+            }
             try {
-                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/shwoody/workId/"+i, appName.getBytes(StandardCharsets.UTF_8));
-                client.getConnectionStateListenable().addListener(new ZkConnectionStateListener("/shwoody/workId/"+i, appName.getBytes(StandardCharsets.UTF_8)));
+                client.create().creatingParentsIfNeeded()
+                        .withMode(CreateMode.EPHEMERAL)
+                        .forPath("/shwoody/workId/"+i, appName.getBytes(StandardCharsets.UTF_8));
                 flag = true;
                 workId = i;
                 break;
@@ -43,11 +68,29 @@ public class ZkWorkerIdGen implements WorkerIdGen {
         }
 
         if (!flag){
-            throw new RuntimeException("get workId failed After retrying 20 times！ ");
+            throw new RuntimeException("get workId failed！ ");
         }
+
+        client.getConnectionStateListenable()
+                .addListener(new ZkConnectionStateListener("/shwoody/workId/"+workId, appName.getBytes(StandardCharsets.UTF_8)));
 
         log.info("start get workId:{}", workId);
         return workId;
+    }
+
+    public static void main(String[] args) {
+        List<String> existingWorkIds = Arrays.asList("1", "2", "4", "5", "6", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25","26", "27", "28", "29", "30");
+        Set<Integer> existingWorkIdSet = new HashSet<>();
+        for (String id : existingWorkIds) {
+            existingWorkIdSet.add(Integer.parseInt(id));
+        }
+        for (int i = 1; i < 50; i++) {
+            if (existingWorkIdSet.contains(i)) {
+                System.out.println("is exist!");
+                continue;
+            }
+            System.out.println(i);
+        }
     }
 
 }
